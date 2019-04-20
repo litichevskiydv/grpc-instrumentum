@@ -1,0 +1,26 @@
+{
+  "name": "grpc-instrumentum",
+  "version": "1.0.0",
+  "description": "A set of tools to simplify working with protoc",
+  "scripts": {
+    "test": "jest --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/litichevskiydv/grpc-instrumentum.git"
+  },
+  "keywords": [
+    "grpc",
+    "protoc",
+    "proto3"
+  ],
+  "author": "Dmitriy Litichevskiy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/litichevskiydv/grpc-instrumentum/issues"
+  },
+  "homepage": "https://github.com/litichevskiydv/grpc-instrumentum#readme",
+  "devDependencies": {
+    "jest": "24.7.1"
+  }
+}
