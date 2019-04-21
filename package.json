@@ -21,6 +21,17 @@
   },
   "homepage": "https://github.com/litichevskiydv/grpc-instrumentum#readme",
   "devDependencies": {
-    "jest": "24.7.1"
+    "jest": "24.7.1",
+    "jest-extended": "0.11.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "jest-extended"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/tests/generated/"
+    ]
   }
 }
