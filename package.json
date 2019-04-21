@@ -2,6 +2,14 @@
   "name": "grpc-instrumentum",
   "version": "1.0.0",
   "description": "A set of tools to simplify working with protoc",
+  "bin": {
+    "protoc-gen-files": "./src/bin/protoc-gen-files.js",
+    "protoc-gen-client": "./src/bin/protoc-gen-client.js",
+    "grpc-gen-swagger": "./src/bin/grpc-gen-swagger.js",
+    "grpc-gen-js": "./src/bin/grpc-gen-js.js",
+    "grpc-gen-ts": "./src/bin/grpc-gen-ts.js",
+    "grpc-gen-client": "./src/bin/grpc-gen-client.js"
+  },
   "scripts": {
     "test": "jest --verbose"
   },
