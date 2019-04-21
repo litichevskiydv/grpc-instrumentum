@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+  - "8"
+  - "10"
+  - lts/*
+  - node
+branches:
+  only:
+    - master
+    - /^release\/.*$/
+    - develop
+script:
+  - npm link
+  - npm run build
+  - npm test
