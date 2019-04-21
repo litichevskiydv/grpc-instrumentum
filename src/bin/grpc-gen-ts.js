@@ -17,6 +17,8 @@ env[pathKeyName] = process.mainModule.paths
 const args = ["-I", path.join(__dirname, "..", "include")].concat(
   process.argv
     .slice(2)
-    .map(x => (x.startsWith("--ts_out") ? x.replace("--ts_out", `--ts${process.platform === "win32" ? ".cmd" : ""}_out`) : x))
+    .map(x =>
+      x.startsWith("--ts_out") ? x.replace("--ts_out", `--ts${process.platform === "win32" ? ".cmd" : ""}_out`) : x
+    )
 );
 execFileSync(`protoc${process.platform === "win32" ? ".exe" : ""}`, args, { env });

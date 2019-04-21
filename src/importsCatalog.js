@@ -1,4 +1,8 @@
-const { FileDescriptorProto, DescriptorProto, EnumDescriptorProto } = require("google-protobuf/google/protobuf/descriptor_pb");
+const {
+  FileDescriptorProto,
+  DescriptorProto,
+  EnumDescriptorProto
+} = require("google-protobuf/google/protobuf/descriptor_pb");
 
 module.exports = class ImportsCatalog {
   constructor() {

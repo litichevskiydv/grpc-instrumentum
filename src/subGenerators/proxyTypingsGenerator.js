@@ -23,7 +23,10 @@ const generate = (builder, serviceDescriptor, importsCatalog) => {
     const outputTypeName = requiresGenerator.getNamespace(outputMessage.fileName) + outputMessage.name;
 
     if (method.getClientStreaming() === true && method.getServerStreaming() === true)
-      builder.appendLineIdented(`${methodName}(message: Iterable<${inputTypeName}>): AsyncIterableIterator<${outputTypeName}>;`, 1);
+      builder.appendLineIdented(
+        `${methodName}(message: Iterable<${inputTypeName}>): AsyncIterableIterator<${outputTypeName}>;`,
+        1
+      );
     else if (method.getClientStreaming() === true)
       builder.appendLineIdented(`${methodName}(message: Iterable<${inputTypeName}>): Promise<${outputTypeName}>;`, 1);
     else if (method.getServerStreaming() === true)

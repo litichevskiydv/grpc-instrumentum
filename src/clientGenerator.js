@@ -2,7 +2,11 @@ const path = require("path");
 const slash = require("slash");
 const { set } = require("dot-prop");
 const camelCase = require("camelcase");
-const { FileDescriptorProto, DescriptorProto, FieldDescriptorProto } = require("google-protobuf/google/protobuf/descriptor_pb");
+const {
+  FileDescriptorProto,
+  DescriptorProto,
+  FieldDescriptorProto
+} = require("google-protobuf/google/protobuf/descriptor_pb");
 
 const ImportsCatalog = require("./importsCatalog");
 const StringBuilder = require("./stringBuilder");
@@ -24,12 +28,17 @@ const scanMesage = (importsCatalog, message, usedImports) => {
     const type = field.getType();
     const typeName = field.getTypeName();
 
-    if (type === FieldDescriptorProto.Type.TYPE_MESSAGE) scanMesage(importsCatalog, importsCatalog.getMessage(typeName), usedImports);
+    if (type === FieldDescriptorProto.Type.TYPE_MESSAGE)
+      scanMesage(importsCatalog, importsCatalog.getMessage(typeName), usedImports);
     else if (type === FieldDescriptorProto.Type.TYPE_ENUM) usedImports.add(importsCatalog.getEnum(typeName).fileName);
   }
 
   messageDescriptor.getNestedTypeList().forEach(nestedMessage => {
-    scanMesage(importsCatalog, importsCatalog.getMessage(`${message.fullName}.${nestedMessage.getName()}`), usedImports);
+    scanMesage(
+      importsCatalog,
+      importsCatalog.getMessage(`${message.fullName}.${nestedMessage.getName()}`),
+      usedImports
+    );
   });
 };
 
@@ -57,7 +66,8 @@ const getUsedImports = (importsCatalog, fileDescriptor) => {
  * @param {string} clientName
  * @returns {string}
  */
-const getClientFullName = (packageName, clientName) => (packageName.length > 0 ? `${packageName}.${clientName}` : clientName);
+const getClientFullName = (packageName, clientName) =>
+  packageName.length > 0 ? `${packageName}.${clientName}` : clientName;
 
 /**
  * Generates JavaScript code for client
@@ -139,7 +149,9 @@ const generateTypings = (importsCatalog, fileDescriptor) => {
     const fileBaseName = path.basename(fileName, path.extname(fileName));
     const namespaceName = packageName.length > 0 ? `${packageName}.${fileBaseName}` : fileBaseName;
 
-    builder.appendLine(`import * as ${requiresGenerator.getNamespace(fileName)} from "${requiresGenerator.getRequirePath(fileName)}";`);
+    builder.appendLine(
+      `import * as ${requiresGenerator.getNamespace(fileName)} from "${requiresGenerator.getRequirePath(fileName)}";`
+    );
     set(root, namespaceName, builder => messagesTypingsGenerator.generate(builder, fileDescriptor));
   });
   fileDescriptor.getServiceList().forEach(serviceDescriptor => {
