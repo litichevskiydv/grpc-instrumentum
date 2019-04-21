@@ -1,7 +1,12 @@
 {
   "name": "grpc-instrumentum",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A set of tools to simplify working with protoc",
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "bin": {
     "protoc-gen-files": "./src/bin/protoc-gen-files.js",
     "protoc-gen-client": "./src/bin/protoc-gen-client.js",
