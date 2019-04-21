@@ -14,19 +14,19 @@ A set of tools to simplify working with protoc
 
 # Usage
 
-##grpc-gen-js
+## grpc-gen-js
 
 ```
 $ grpc-gen-js --js_out=import_style=commonjs,binary:./tests/generated/client --grpc_out=./tests/generated/client -I ./tests/protos greeter.proto
 ```
 
-##grpc-gen-ts
+## grpc-gen-ts
 
 ```
 $ grpc-gen-ts --ts_out=./tests/generated/client -I ./tests/protos greeter.proto
 ```
 
-##grpc-gen-ts
+## grpc-gen-ts
 
 ```
 grpc-gen-client --help
