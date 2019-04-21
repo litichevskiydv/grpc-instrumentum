@@ -21,8 +21,25 @@
   },
   "homepage": "https://github.com/litichevskiydv/grpc-instrumentum#readme",
   "devDependencies": {
+    "@grpc/proto-loader": "0.5.0",
+    "grpc": "1.20.0",
     "jest": "24.7.1",
-    "jest-extended": "0.11.1"
+    "jest-extended": "0.11.1",
+    "make-dir-cli": "2.0.0",
+    "protobufjs": "6.8.8"
+  },
+  "dependencies": {
+    "bl": "3.0.0",
+    "camelcase": "5.3.1",
+    "del": "4.1.0",
+    "dot-prop": "5.0.0",
+    "google-protobuf": "3.7.1",
+    "grpc-tools": "1.7.3",
+    "load-json-file": "5.3.0",
+    "make-dir": "3.0.0",
+    "path-key": "3.1.0",
+    "slash": "2.0.0",
+    "ts-protoc-gen": "0.9.0"
   },
   "jest": {
     "testEnvironment": "node",
