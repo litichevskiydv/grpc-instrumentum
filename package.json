@@ -11,6 +11,12 @@
     "grpc-gen-client": "./src/bin/grpc-gen-client.js"
   },
   "scripts": {
+    "build:server:protos": "make-dir ./tests/generated/server && pbjs -r greeter -t static-module -w commonjs --no-verify -o ./tests/generated/server/greeter_pb.js ./tests/protos/greeter.proto",
+    "build:server:types": "make-dir ./tests/generated/server && pbts -o ./tests/generated/server/greeter_pb.d.ts ./tests/generated/server/greeter_pb.js",
+    "build:server:swagger": "make-dir ./tests/generated/server && grpc-gen-swagger --swagger_opt=json_names_for_fields=true --swagger_out=logtostderr=true:./tests/generated/server/ -I ./tests/protos/ greeter.proto",
+    "build:server": "npm run build:server:protos && npm run build:server:types && npm run build:server:swagger",
+    "build:client": "grpc-gen-client --out ./tests/generated/client --include ./tests/protos/ greeter.proto",
+    "build": "npm run build:server && npm run build:client",
     "test": "jest --verbose"
   },
   "repository": {
@@ -31,6 +37,7 @@
   "devDependencies": {
     "@grpc/proto-loader": "0.5.0",
     "grpc": "1.20.0",
+    "grpc-host-builder": "1.0.0",
     "jest": "24.7.1",
     "jest-extended": "0.11.1",
     "make-dir-cli": "2.0.0",
