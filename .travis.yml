@@ -13,7 +13,8 @@ branches:
   - develop
 script:
 - npm link
-- npm run build
+- npm run build:server:protos
+- npm run build:client
 - npm test
 jobs:
   include:
