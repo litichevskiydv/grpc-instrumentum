@@ -41,7 +41,7 @@
   "homepage": "https://github.com/litichevskiydv/grpc-instrumentum#readme",
   "devDependencies": {
     "@grpc/proto-loader": "0.5.0",
-    "grpc": "1.20.0",
+    "grpc": "1.20.2",
     "grpc-host-builder": "1.0.0",
     "grpc-promise": "1.4.0",
     "jest": "24.7.1",
