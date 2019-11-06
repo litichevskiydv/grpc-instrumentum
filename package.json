@@ -41,9 +41,8 @@
   "homepage": "https://github.com/litichevskiydv/grpc-instrumentum#readme",
   "devDependencies": {
     "@grpc/proto-loader": "0.5.0",
-    "grpc": "1.20.2",
-    "grpc-host-builder": "1.0.1",
-    "grpc-promise": "1.4.0",
+    "grpc": "1.24.2",
+    "grpc-host-builder": "2.1.1",
     "jest": "24.7.1",
     "jest-extended": "0.11.1",
     "make-dir-cli": "2.0.0",

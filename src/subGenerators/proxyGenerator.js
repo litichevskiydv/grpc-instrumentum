@@ -14,36 +14,75 @@ const generate = (builder, serviceDescriptor) => {
 
   builder
     .appendLineIdented(`${clientName}: class ${clientName} {`)
-    .appendLineIdented("constructor(address, credentials) {", 1)
-    .appendLineIdented(`this._client = new ${clientName}Raw(address, credentials);`, 2)
-    .appendLineIdented("grpcPromise.promisifyAll(this._client);", 2)
+    .appendLineIdented("constructor(address, credentials, options) {", 1)
+    .appendLineIdented(`this._client = new ${clientName}Raw(address, credentials, options);`, 2)
+    .appendLineIdented("}", 1)
+    .appendLineIdented("close() {", 1)
+    .appendLineIdented("this._client.close();", 2)
     .appendLineIdented("}", 1);
 
   serviceDescriptor.getMethodList().forEach(method => {
     const methodName = camelCase(method.getName());
     if (method.getClientStreaming() === true && method.getServerStreaming() === true)
       builder
-        .appendLineIdented(`async *${methodName}(messages) {`, 1)
-        .appendLineIdented(`const channel = this._client.${methodName}();`, 2)
-        .appendLineIdented("for (const message of messages) yield await channel.sendMessage(message);", 2)
-        .appendLineIdented("channel.end();", 2)
+        .appendLineIdented(`${methodName}(messages, metadata, options) {`, 1)
+        .appendLineIdented(`const call = this._client.${methodName}(metadata, options);`, 2)
+        .appendLineIdented("const proxy = new Subject();", 2)
+        .appendLineIdented("streamToRx(call).subscribe({", 2)
+        .appendLineIdented("next: message => proxy.next(message),", 3)
+        .appendLineIdented("error: err => proxy.error(err),", 3)
+        .appendLineIdented("complete: () => proxy.complete()", 3)
+        .appendLineIdented("});", 2)
+        .appendLineIdented("messages.subscribe({", 2)
+        .appendLineIdented("next(message) {", 3)
+        .appendLineIdented("call.write(message);", 4)
+        .appendLineIdented("},", 3)
+        .appendLineIdented("error(err) {", 3)
+        .appendLineIdented("proxy.error(err);", 4)
+        .appendLineIdented("call.cancel();", 4)
+        .appendLineIdented("},", 3)
+        .appendLineIdented("complete() {", 3)
+        .appendLineIdented("call.end();", 4)
+        .appendLineIdented("}", 3)
+        .appendLineIdented("});", 2)
+        .appendLineIdented("return proxy.asObservable();", 2)
         .appendLineIdented("}", 1);
     else if (method.getClientStreaming() === true)
       builder
-        .appendLineIdented(`async ${methodName}(messages) {`, 1)
-        .appendLineIdented(`const channel = this._client.${methodName}();`, 2)
-        .appendLineIdented("for (const message of messages) channel.sendMessage(message);", 2)
-        .appendLineIdented("return await channel.end();", 2)
+        .appendLineIdented(`async ${methodName}(messages, metadata, options) {`, 1)
+        .appendLineIdented("return await new Promise((resolve, reject) => {", 2)
+        .appendLineIdented(`const call = this._client.${methodName}(metadata, options, (err, response) => {`, 3)
+        .appendLineIdented("if (err) reject(err);", 4)
+        .appendLineIdented("else resolve(response);", 4)
+        .appendLineIdented("});", 3)
+        .appendLineIdented("messages.subscribe({", 3)
+        .appendLineIdented("next(message) {", 4)
+        .appendLineIdented("call.write(message);", 5)
+        .appendLineIdented("},", 4)
+        .appendLineIdented("error(err) {", 4)
+        .appendLineIdented("call.cancel();", 5)
+        .appendLineIdented("reject(err);", 5)
+        .appendLineIdented("},", 4)
+        .appendLineIdented("complete() {", 4)
+        .appendLineIdented("call.end();", 5)
+        .appendLineIdented("}", 4)
+        .appendLineIdented("});", 3)
+        .appendLineIdented("});", 2)
         .appendLineIdented("}", 1);
     else if (method.getServerStreaming() === true)
       builder
-        .appendLineIdented(`async ${methodName}(message) {`, 1)
-        .appendLineIdented(`return await this._client.${methodName}().sendMessage(message);`, 2)
+        .appendLineIdented(`${methodName}(message, metadata, options) {`, 1)
+        .appendLineIdented(`return streamToRx(this._client.${methodName}(message, metadata, options));`, 2)
         .appendLineIdented("}", 1);
     else
       builder
-        .appendLineIdented(`async ${methodName}(message) {`, 1)
-        .appendLineIdented(`return await this._client.${methodName}().sendMessage(message);`, 2)
+        .appendLineIdented(`async ${methodName}(message, metadata, options) {`, 1)
+        .appendLineIdented("return await new Promise((resolve, reject) => {", 2)
+        .appendLineIdented(`this._client.${methodName}(message, metadata, options, (error, response) => {`, 3)
+        .appendLineIdented("if (error) reject(error);", 4)
+        .appendLineIdented("else resolve(response);", 4)
+        .appendLineIdented("});", 3)
+        .appendLineIdented("});", 2)
         .appendLineIdented("}", 1);
   });
 

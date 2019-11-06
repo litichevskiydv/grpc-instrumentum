@@ -13,6 +13,7 @@ const StringBuilder = require("./stringBuilder");
 const requiresGenerator = require("./subGenerators/requiresGenerator");
 const messagesGenerator = require("./subGenerators/messagesGenerator");
 const messagesTypingsGenerator = require("./subGenerators/messagesTypingsGenerator");
+const clientOptionsTypingGenerator = require("./subGenerators/clientOptionsTypingGenerator");
 const proxyGenerator = require("./subGenerators/proxyGenerator");
 const proxyTypingsGenerator = require("./subGenerators/proxyTypingsGenerator");
 
@@ -71,6 +72,15 @@ const getClientFullName = (packageName, clientName) =>
   packageName.length > 0 ? `${packageName}.${clientName}` : clientName;
 
 /**
+ * @param {FileDescriptorProto} fileDescriptor
+ * @returns {boolean}
+ */
+const isRxJsStreamNeeded = fileDescriptor =>
+  fileDescriptor
+    .getServiceList()
+    .some(serviceDescriptor => serviceDescriptor.getMethodList().some(method => method.getServerStreaming() === true));
+
+/**
  * @param {StringBuilder} builder
  * @param {*} container
  * @returns {StringBuilder}
@@ -95,11 +105,14 @@ const generateExportsStructure = (builder, container) => {
 const generateJs = (importsCatalog, fileDescriptor) => {
   const builder = new StringBuilder();
 
-  builder.appendLine('const grpcPromise = require("grpc-promise");').appendLine();
+  if (isRxJsStreamNeeded(fileDescriptor))
+    builder
+      .appendLine('const { Subject } = require("rxjs");')
+      .appendLine('const { streamToRx } = require("rxjs-stream")')
+      .appendLine();
 
   const root = {};
   const usedImports = getUsedImports(importsCatalog, fileDescriptor);
-
   importsCatalog.importedFiles.forEach(fileDescriptor => {
     const fileName = fileDescriptor.getName();
     if (usedImports.has(fileName) === false) return;
@@ -131,6 +144,19 @@ const generateJs = (importsCatalog, fileDescriptor) => {
 };
 
 /**
+ * @param {FileDescriptorProto} fileDescriptor
+ * @returns {boolean}
+ */
+const isRxJsNeeded = fileDescriptor =>
+  fileDescriptor
+    .getServiceList()
+    .some(serviceDescriptor =>
+      serviceDescriptor
+        .getMethodList()
+        .some(method => method.getClientStreaming() === true || method.getServerStreaming() === true)
+    );
+
+/**
  * @param {StringBuilder} builder
  * @param {*} container
  * @returns {StringBuilder}
@@ -155,11 +181,13 @@ const generateTypesStructure = (builder, container) => {
 const generateTypings = (importsCatalog, fileDescriptor) => {
   const builder = new StringBuilder();
 
-  builder.appendLineIdented('import { ChannelCredentials } from "grpc";').appendLine();
+  if (isRxJsNeeded(fileDescriptor)) builder.appendLine('import { Subscribable, Observable } from "rxjs";');
+  builder
+    .appendLine('import { ChannelCredentials, Metadata, CallOptions, InterceptingCall, MethodDefinition } from "grpc";')
+    .appendLine();
 
   const root = {};
   const usedImports = getUsedImports(importsCatalog, fileDescriptor);
-
   importsCatalog.importedFiles.forEach(fileDescriptor => {
     const fileName = fileDescriptor.getName();
     if (usedImports.has(fileName) === false) return;
@@ -178,6 +206,7 @@ const generateTypings = (importsCatalog, fileDescriptor) => {
     set(root, clientFullName, builder => proxyTypingsGenerator.generate(builder, serviceDescriptor, importsCatalog));
   });
 
+  clientOptionsTypingGenerator.generate(builder.appendLine());
   return generateTypesStructure(builder.appendLine(), root).toString();
 };
 

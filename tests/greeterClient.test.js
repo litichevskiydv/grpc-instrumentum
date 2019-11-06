@@ -2,13 +2,12 @@ const path = require("path");
 const grpc = require("grpc");
 const GRPCError = require("grpc-error");
 const protoLoader = require("@grpc/proto-loader");
-const GrpcHostBuilder = require("grpc-host-builder");
-const { HelloRequest: ServerRequest, HelloResponse: ServerResponse } = require("./generated/server/greeter_pb").v1;
+const { GrpcHostBuilder } = require("grpc-host-builder");
 const {
-  HelloRequest: ClientRequest,
-  HelloResponse: ClientResponse,
-  GreeterClient
-} = require("./generated/client/greeter_client_pb").v1;
+  HelloRequest: ServerUnaryRequest,
+  HelloResponse: ServerUnaryResponse
+} = require("./generated/server/greeter_pb").v1;
+const { HelloRequest: ClientUnaryRequest, GreeterClient } = require("./generated/client/greeter_client_pb").v1;
 
 const grpcBind = "0.0.0.0:3000";
 const packageObject = grpc.loadPackageDefinition(
@@ -16,6 +15,9 @@ const packageObject = grpc.loadPackageDefinition(
     includeDirs: [path.join(__dirname, "../src/include/"), path.join(__dirname, "../node_modules/grpc-tools/bin/")]
   })
 );
+
+let server = null;
+let client = null;
 
 /**
  * Creates and starts gRPC server
@@ -25,8 +27,8 @@ const createServer = configurator => {
   return configurator(new GrpcHostBuilder())
     .addService(packageObject.v1.Greeter.service, {
       sayHello: call => {
-        const request = new ServerRequest(call.request);
-        return new ServerResponse({ message: `Hello, ${request.name}!` });
+        const request = new ServerUnaryRequest(call.request);
+        return new ServerUnaryResponse({ message: `Hello, ${request.name}!` });
       }
     })
     .bind(grpcBind)
@@ -38,21 +40,24 @@ const createServer = configurator => {
  * @returns {Promise<string>}
  */
 const getMessage = async name => {
-  const client = new GreeterClient(grpcBind, grpc.credentials.createInsecure());
-
-  const request = new ClientRequest();
+  const request = new ClientUnaryRequest();
   request.setName(name);
 
+  client = new GreeterClient(grpcBind, grpc.credentials.createInsecure());
   return (await client.sayHello(request)).getMessage();
 };
 
-test("Must receive message", async () => {
+afterEach(() => {
+  if (client) client.close();
+  if (server) server.forceShutdown();
+});
+
+test("Must perform unary call", async () => {
   // Given
-  const server = createServer(x => x);
+  server = createServer(x => x);
 
   // When
   const actualMessage = await getMessage("Tom");
-  server.forceShutdown();
 
   // Then
   expect(actualMessage).toBe("Hello, Tom!");
@@ -60,7 +65,7 @@ test("Must receive message", async () => {
 
 test("Must receive message composed by interceptors", async () => {
   // Given
-  const server = createServer(x =>
+  server = createServer(x =>
     x
       .addInterceptor(async (call, methodDefinition, callback, next) => {
         if (call.request.name === "Tom") callback(null, { message: "Hello again, Tom!" });
@@ -76,7 +81,6 @@ test("Must receive message composed by interceptors", async () => {
   const messageForTom = await getMessage("Tom");
   const messageForJane = await getMessage("Jane");
   const messageForAlex = await getMessage("Alex");
-  server.forceShutdown();
 
   // Then
   expect(messageForTom).toBe("Hello again, Tom!");
@@ -89,7 +93,7 @@ test("Must receive error", async () => {
   const mockLogger = { error: jest.fn() };
   const mockLoggersFactory = () => mockLogger;
 
-  const server = createServer(x =>
+  server = createServer(x =>
     x
       .addInterceptor(() => {
         throw new Error("Something went wrong");
@@ -99,5 +103,4 @@ test("Must receive error", async () => {
 
   // When, Then
   await expect(getMessage("Tom")).rejects.toEqual(new Error("13 INTERNAL: Something went wrong"));
-  server.forceShutdown();
 });

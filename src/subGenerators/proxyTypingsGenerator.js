@@ -13,7 +13,8 @@ const requiresGenerator = require("./requiresGenerator");
 const generate = (builder, serviceDescriptor, importsCatalog) => {
   builder
     .appendLineIdented(`export class ${serviceDescriptor.getName()}Client {`)
-    .appendLineIdented("constructor(address: string, credentials: ChannelCredentials);", 1);
+    .appendLineIdented("constructor(address: string, credentials: ChannelCredentials, options?: ClientlOptions);", 1)
+    .appendLineIdented("close(): void;", 1);
 
   serviceDescriptor.getMethodList().forEach(method => {
     const methodName = camelCase(method.getName());
@@ -23,15 +24,12 @@ const generate = (builder, serviceDescriptor, importsCatalog) => {
     const outputTypeName = requiresGenerator.getNamespace(outputMessage.fileName) + outputMessage.name;
 
     if (method.getClientStreaming() === true && method.getServerStreaming() === true)
-      builder.appendLineIdented(
-        `${methodName}(message: Iterable<${inputTypeName}>): AsyncIterableIterator<${outputTypeName}>;`,
-        1
-      );
+      builder.appendLineIdented(`${methodName}(messages: Subscribable<${inputTypeName}>, metadata?: Metadata, options?: CallOptions): Observable<${outputTypeName}>;`, 1); // prettier-ignore
     else if (method.getClientStreaming() === true)
-      builder.appendLineIdented(`${methodName}(message: Iterable<${inputTypeName}>): Promise<${outputTypeName}>;`, 1);
+      builder.appendLineIdented(`${methodName}(messages: Subscribable<${inputTypeName}>, metadata?: Metadata, options?: CallOptions): Promise<${outputTypeName}>;`, 1); // prettier-ignore
     else if (method.getServerStreaming() === true)
-      builder.appendLineIdented(`${methodName}(message: ${inputTypeName}): Promise<Array<${outputTypeName}>>;`, 1);
-    else builder.appendLineIdented(`${methodName}(message: ${inputTypeName}): Promise<${outputTypeName}>;`, 1);
+      builder.appendLineIdented(`${methodName}(message: ${inputTypeName}, metadata?: Metadata, options?: CallOptions): Observable<${outputTypeName}>;`, 1); // prettier-ignore
+    else builder.appendLineIdented(`${methodName}(message: ${inputTypeName}, metadata?: Metadata, options?: CallOptions): Promise<${outputTypeName}>;`, 1); // prettier-ignore
   });
 
   builder.appendLineIdented("}");
