@@ -9,6 +9,8 @@ const {
 } = require("./generated/server/greeter_pb").v1;
 const { HelloRequest: ClientUnaryRequest, GreeterClient } = require("./generated/client/greeter_client_pb").v1;
 
+grpc.setLogVerbosity(grpc.logVerbosity.ERROR + 1);
+
 const grpcBind = "0.0.0.0:3000";
 const packageObject = grpc.loadPackageDefinition(
   protoLoader.loadSync(path.join(__dirname, "./protos/greeter.proto"), {
