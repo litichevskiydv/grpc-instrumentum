@@ -49,12 +49,14 @@ const createHost = configurator => {
         });
       },
       sum: call =>
-        call.source.pipe(
-          reduce((acc, one) => {
-            acc.result = acc.result + one.number;
-            return acc;
-          }, new ServerIngoingStreamingResponse({ result: 0 }))
-        ),
+        call.source
+          .pipe(
+            reduce((acc, one) => {
+              acc.result = acc.result + one.number;
+              return acc;
+            }, new ServerIngoingStreamingResponse({ result: 0 }))
+          )
+          .toPromise(),
       range: call => {
         const request = new ServerOutgoingStreamingRequest(call.request);
         return new Observable(subscriber => {
@@ -104,15 +106,17 @@ test("Must perform client streaming call", async () => {
   const numbers = [1, 2, 3, 4, 5, 6, 7];
 
   // When
-  const actualSum = (await client.sum(
-    from(
-      numbers.map(x => {
-        const request = new ClientOutgoingStreamingRequest();
-        request.setNumber(x);
-        return request;
-      })
+  const actualSum = (
+    await client.sum(
+      from(
+        numbers.map(x => {
+          const request = new ClientOutgoingStreamingRequest();
+          request.setNumber(x);
+          return request;
+        })
+      )
     )
-  )).getResult();
+  ).getResult();
 
   // Then
   const expectedSum = numbers.reduce((acc, one) => acc + one, 0);
