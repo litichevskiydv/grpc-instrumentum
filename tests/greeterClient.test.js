@@ -1,7 +1,7 @@
 const path = require("path");
 const grpc = require("grpc");
 const GRPCError = require("grpc-error");
-const protoLoader = require("@grpc/proto-loader");
+const protoLoader = require("grpc-pbf-loader").packageDefinition;
 const { GrpcHostBuilder } = require("grpc-host-builder");
 const { from, Observable, Subject } = require("rxjs");
 const { map, reduce } = require("rxjs/operators");
@@ -27,7 +27,7 @@ grpc.setLogVerbosity(grpc.logVerbosity.ERROR + 1);
 const grpcBind = "0.0.0.0:3000";
 const packageObject = grpc.loadPackageDefinition(
   protoLoader.loadSync(path.join(__dirname, "./protos/greeter.proto"), {
-    includeDirs: [path.join(__dirname, "../src/include/"), path.join(__dirname, "../node_modules/grpc-tools/bin/")]
+    includeDirs: [path.join(__dirname, "../src/include/")]
   })
 );
 
