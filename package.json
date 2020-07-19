@@ -2,6 +2,9 @@
   "name": "grpc-instrumentum",
   "version": "2.0.6",
   "description": "A set of tools to simplify working with protoc",
+  "engines": {
+    "node": ">=8"
+  },
   "files": [
     "src",
     "README.md",
