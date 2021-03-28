@@ -78,7 +78,7 @@ const getMessage = async (name) => {
   const request = new ClientUnaryRequest();
   request.setName(name);
 
-  client = new GreeterClient(grpcBind, grpc.credentials.createInsecure());
+  if (client === null) client = new GreeterClient(grpcBind, grpc.credentials.createInsecure());
   return (await client.sayHello(request)).getMessage();
 };
 
@@ -89,8 +89,15 @@ const prepareErrorMatchingObject = (innerErrorMessage) =>
   });
 
 afterEach(() => {
-  if (client) client.close();
-  if (server) server.forceShutdown();
+  if (client) {
+    client.close();
+    client = null;
+  }
+
+  if (server) {
+    server.forceShutdown();
+    server = null;
+  }
 });
 
 test("Must perform unary call", async () => {
