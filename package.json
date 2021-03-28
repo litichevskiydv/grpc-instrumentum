@@ -45,7 +45,7 @@
   "devDependencies": {
     "@grpc/grpc-js": "^1.2.12",
     "@types/jest": "^26.0.22",
-    "grpc-host-builder": "^5.3.2",
+    "grpc-host-builder": "^5.3.3",
     "grpc-pbf-loader": "^1.0.3",
     "jest": "^26.6.3",
     "jest-extended": "^0.11.5",
