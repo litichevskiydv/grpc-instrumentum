@@ -1,6 +1,5 @@
 const path = require("path");
-const grpc = require("grpc");
-const grpcJs = require("@grpc/grpc-js");
+const grpc = require("@grpc/grpc-js");
 const protoLoader = require("grpc-pbf-loader").packageDefinition;
 const { GrpcHostBuilder } = require("grpc-host-builder");
 const { from, Observable, Subject } = require("rxjs");
@@ -82,6 +81,12 @@ const getMessage = async (name) => {
   client = new GreeterClient(grpcBind, grpc.credentials.createInsecure());
   return (await client.sayHello(request)).getMessage();
 };
+
+const prepareErrorMatchingObject = (innerErrorMessage) =>
+  expect.objectContaining({
+    message: "13 INTERNAL: Unhandled exception has occurred",
+    details: [expect.objectContaining({ detail: innerErrorMessage })]
+  });
 
 afterEach(() => {
   if (client) client.close();
@@ -176,6 +181,7 @@ test("Must receive error thrown in unary method implementation", async () => {
   // Given
   const mockLogger = { error: jest.fn() };
   const mockLoggersFactory = () => mockLogger;
+  const errorMessage = "Something went wrong";
 
   server = await createHost((x) =>
     x
@@ -186,7 +192,7 @@ test("Must receive error thrown in unary method implementation", async () => {
   );
 
   // When, Then
-  await expect(getMessage("Tom")).rejects.toEqual(new Error("13 INTERNAL: Unhandled exception has occurred"));
+  await expect(getMessage("Tom")).rejects.toMatchObject(prepareErrorMatchingObject(errorMessage));
 });
 
 describe("Must handle client side errors during the client streaming call", () => {

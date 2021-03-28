@@ -49,7 +49,7 @@ module.exports = class ImportsCatalog {
     };
 
     this._addEnums(fileDescriptor, fullName, messageDescriptor.getEnumTypeList());
-    messageDescriptor.getNestedTypeList().forEach(x => this._addMessage(fileDescriptor, fullName, x));
+    messageDescriptor.getNestedTypeList().forEach((x) => this._addMessage(fileDescriptor, fullName, x));
   }
 
   /**
@@ -59,7 +59,7 @@ module.exports = class ImportsCatalog {
    * @param {Array<EnumDescriptorProto>} enumsDescriptors Enums descriptors
    */
   _addEnums(fileDescriptor, namespace, enumsDescriptors) {
-    enumsDescriptors.forEach(enumDescriptor => {
+    enumsDescriptors.forEach((enumDescriptor) => {
       const fullName = `${namespace}.${enumDescriptor.getName()}`;
       const typeFullName = this._prepareTypeFullName(fullName);
 
@@ -79,7 +79,9 @@ module.exports = class ImportsCatalog {
   processFileDescriptor(fileDescriptor) {
     this.importedFiles.push(fileDescriptor);
     this._addEnums(fileDescriptor, fileDescriptor.getPackage(), fileDescriptor.getEnumTypeList());
-    fileDescriptor.getMessageTypeList().forEach(x => this._addMessage(fileDescriptor, fileDescriptor.getPackage(), x));
+    fileDescriptor
+      .getMessageTypeList()
+      .forEach((x) => this._addMessage(fileDescriptor, fileDescriptor.getPackage(), x));
   }
 
   /**
