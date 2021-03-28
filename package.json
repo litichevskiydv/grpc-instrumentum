@@ -3,7 +3,7 @@
   "version": "2.0.6",
   "description": "A set of tools to simplify working with protoc",
   "engines": {
-    "node": ">=8"
+    "node": ">=10.10.0"
   },
   "files": [
     "src",
