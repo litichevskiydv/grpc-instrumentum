@@ -43,15 +43,16 @@
   },
   "homepage": "https://github.com/litichevskiydv/grpc-instrumentum#readme",
   "devDependencies": {
-    "@types/jest": "^26.0.5",
+    "@grpc/grpc-js": "^1.2.12",
+    "@types/jest": "^26.0.22",
     "grpc": "^1.24.2",
-    "grpc-host-builder": "^4.3.2",
-    "grpc-pbf-loader": "^1.0.2",
-    "jest": "^26.1.0",
+    "grpc-host-builder": "^5.3.2",
+    "grpc-pbf-loader": "^1.0.3",
+    "jest": "^26.6.3",
     "jest-extended": "^0.11.5",
     "make-dir-cli": "^2.0.0",
-    "protobufjs": "^6.10.1",
-    "rxjs": "^6.6.0",
+    "protobufjs": "^6.10.2",
+    "rxjs": "^6.6.6",
     "rxjs-stream": "^3.2.1"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 const path = require("path");
 const grpc = require("grpc");
-const GRPCError = require("grpc-error");
+const grpcJs = require("@grpc/grpc-js");
 const protoLoader = require("grpc-pbf-loader").packageDefinition;
 const { GrpcHostBuilder } = require("grpc-host-builder");
 const { from, Observable, Subject } = require("rxjs");
@@ -38,17 +38,17 @@ let client = null;
  * Creates and starts gRPC server
  * @param {function(GrpcHostBuilder):GrpcHostBuilder} configurator Server builder configurator
  */
-const createHost = configurator => {
+const createHost = async (configurator) => {
   return configurator(new GrpcHostBuilder())
     .addService(packageObject.v1.Greeter.service, {
-      sayHello: call => {
+      sayHello: (call) => {
         const request = new ServerUnaryRequest(call.request);
         return new ServerUnaryResponse({
           spanId: call.metadata.get("span_id")[0],
           message: `Hello, ${request.name}!`
         });
       },
-      sum: call =>
+      sum: (call) =>
         call.source
           .pipe(
             reduce((acc, one) => {
@@ -57,25 +57,25 @@ const createHost = configurator => {
             }, new ServerIngoingStreamingResponse({ result: 0 }))
           )
           .toPromise(),
-      range: call => {
+      range: (call) => {
         const request = new ServerOutgoingStreamingRequest(call.request);
-        return new Observable(subscriber => {
+        return new Observable((subscriber) => {
           for (let i = request.from; i <= request.to; i++)
             subscriber.next(new ServerOutgoingStreamingResponse({ result: i }));
           subscriber.complete();
         });
       },
-      select: call => call.source.pipe(map(x => new ServerBidiStreamingResponse({ value: x.value + 1 })))
+      select: (call) => call.source.pipe(map((x) => new ServerBidiStreamingResponse({ value: x.value + 1 })))
     })
     .bind(grpcBind)
-    .build();
+    .buildAsync();
 };
 
 /**
  * @param {string} name
  * @returns {Promise<string>}
  */
-const getMessage = async name => {
+const getMessage = async (name) => {
   const request = new ClientUnaryRequest();
   request.setName(name);
 
@@ -90,7 +90,7 @@ afterEach(() => {
 
 test("Must perform unary call", async () => {
   // Given
-  server = createHost(x => x);
+  server = await createHost((x) => x);
 
   // When
   const actualMessage = await getMessage("Tom");
@@ -101,7 +101,7 @@ test("Must perform unary call", async () => {
 
 test("Must perform client streaming call", async () => {
   // Given
-  server = createHost(x => x);
+  server = await createHost((x) => x);
   client = new GreeterClient(grpcBind, grpc.credentials.createInsecure());
   const numbers = [1, 2, 3, 4, 5, 6, 7];
 
@@ -109,7 +109,7 @@ test("Must perform client streaming call", async () => {
   const actualSum = (
     await client.sum(
       from(
-        numbers.map(x => {
+        numbers.map((x) => {
           const request = new ClientOutgoingStreamingRequest();
           request.setNumber(x);
           return request;
@@ -125,7 +125,7 @@ test("Must perform client streaming call", async () => {
 
 test("Must perform server streaming call", async () => {
   // Given
-  server = createHost(x => x);
+  server = await createHost((x) => x);
   client = new GreeterClient(grpcBind, grpc.credentials.createInsecure());
 
   // When
@@ -134,7 +134,7 @@ test("Must perform server streaming call", async () => {
   rangeRequest.setTo(3);
 
   const actualNumbers = [];
-  await client.range(rangeRequest).forEach(x => actualNumbers.push(x.getResult()));
+  await client.range(rangeRequest).forEach((x) => actualNumbers.push(x.getResult()));
 
   // Then
   const expectedNumbers = [1, 2, 3];
@@ -143,14 +143,14 @@ test("Must perform server streaming call", async () => {
 
 test("Must perform bidirectional streaming call", async () => {
   // Given
-  server = createHost(x => x);
+  server = await createHost((x) => x);
   client = new GreeterClient(grpcBind, grpc.credentials.createInsecure());
 
   // When
   const actualNumbers = [];
   const input = new Subject();
   const output = client.select(input);
-  output.subscribe(message => {
+  output.subscribe((message) => {
     actualNumbers.push(message.getValue());
 
     if (message <= 5) {
@@ -177,7 +177,7 @@ test("Must receive error thrown in unary method implementation", async () => {
   const mockLogger = { error: jest.fn() };
   const mockLoggersFactory = () => mockLogger;
 
-  server = createHost(x =>
+  server = await createHost((x) =>
     x
       .addInterceptor(() => {
         throw new Error("Something went wrong");
@@ -186,36 +186,36 @@ test("Must receive error thrown in unary method implementation", async () => {
   );
 
   // When, Then
-  await expect(getMessage("Tom")).rejects.toEqual(new Error("13 INTERNAL: Something went wrong"));
+  await expect(getMessage("Tom")).rejects.toEqual(new Error("13 INTERNAL: Unhandled exception has occurred"));
 });
 
 describe("Must handle client side errors during the client streaming call", () => {
   const testCases = [
     {
       toString: () => "Exception caused by calling subscriber's error method",
-      messages: new Observable(subscriber => {
+      messages: new Observable((subscriber) => {
         subscriber.error(new Error("Something went wrong"));
       })
     },
     {
       toString: () => "Exception caused in Observable next method",
       messages: from([1]).pipe(
-        map(x => {
+        map((x) => {
           if (x === 1) throw new Error("Something went wrong");
         })
       )
     },
     {
       toString: () => "Exception caused in Observable constructor",
-      messages: new Observable(subscriber => {
+      messages: new Observable((subscriber) => {
         throw new Error("Something went wrong");
       })
     }
   ];
 
-  test.each(testCases)("%s", async testCase => {
+  test.each(testCases)("%s", async (testCase) => {
     // Given
-    server = createHost(x => x);
+    server = await createHost((x) => x);
     client = new GreeterClient(grpcBind, grpc.credentials.createInsecure());
 
     // When, Then
@@ -227,29 +227,29 @@ describe("Must handle client side errors during the bidirectional streaming call
   const testCases = [
     {
       toString: () => "Exception caused by calling subscriber's error method",
-      messages: new Observable(subscriber => {
+      messages: new Observable((subscriber) => {
         subscriber.error(new Error("Something went wrong"));
       })
     },
     {
       toString: () => "Exception caused in Observable next method",
       messages: from([1]).pipe(
-        map(x => {
+        map((x) => {
           if (x === 1) throw new Error("Something went wrong");
         })
       )
     },
     {
       toString: () => "Exception caused in Observable constructor",
-      messages: new Observable(subscriber => {
+      messages: new Observable((subscriber) => {
         throw new Error("Something went wrong");
       })
     }
   ];
 
-  test.each(testCases)("%s", async testCase => {
+  test.each(testCases)("%s", async (testCase) => {
     // Given
-    server = createHost(x => x);
+    server = await createHost((x) => x);
     client = new GreeterClient(grpcBind, grpc.credentials.createInsecure());
 
     // When, Then
